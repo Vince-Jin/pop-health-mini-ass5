@@ -1,0 +1,54 @@
+# ============================================================ 
+# 	Mini-assignment # 5
+# ============================================================ 
+
+# using the following data.table, calculate the following (use built-in data.table functions):
+library(data.table)
+set.seed(1234)
+id = 1:5000
+age = abs(rnorm(5000,40,20))
+race = sample(c('W','B','A',NA),5000,replace=T)
+dxct = floor(sample(1:3,5000,replace=T)*(age/10))
+cost = rnbinom(5000, size = 1, mu = 10000)*age
+dt = data.table(id = id, age = age, race = race, dxct = dxct, cost = cost)
+
+# (1) count patients with missing race info
+
+library(data.table)
+cat("The number of patients with missing race info is:\n")
+dt[is.na(race), .N]
+
+# (2) count patients designated as Asian, more than 65 with a cost over 10k
+cat("The number of patients designated as Asian, more than 65 with a cost over 10k is:\n")
+dt[race == "A" & age > 65 & cost > 10000, .N]
+
+# (3) count patients over 65 with either a cost over 500k "or" more than 5 diagnoses
+cat("The number of patients over 65 with either a cost over 500k or more than 5 diagnoses is:\n")
+dt[age > 65 & (cost > 500000 | dxct > 5), .N]
+
+# (4) count patients in the top 1% of cost (use the quantile command)
+cat("The number of patients in the top 1% of cost is:\n")
+dt[cost >= quantile(dt$cost, probs = (1 - 0.01)), .N]
+
+# (5) calculate the following per race: count of patients, average and SD of age, average and SD of number of diseases, and average and SD of cost [using built-in data.table functions]
+cat("Count of patients by race:\n")
+dt[, .N, by = race]
+cat("average of age by race:\n")
+dt[, .(mean(age)), by = race]
+cat("SD of age by race:\n")
+dt[, .(sd(age)), by = race]
+cat("average of cost by race:\n")
+dt[, .(mean(cost)), by = race]
+cat("SD of cost by race:\n")
+dt[, .(sd(cost)), by = race]
+cat("aggregated:\n")
+dt[, .(ct = .N, avg_age = mean(age), sd_age = sd(age), avg_cost = mean(cost), sd_cost = sd(cost)), by = race]
+
+# (6) join the data.table with a new data.table that provides some lab information (explain the "NA" in the new merged data.table)
+id = 1000:5000
+lab = round(runif(4001, 50, 100))
+dt_lab = data.table(id = id, lab = lab)
+
+merge(dt, dt_lab, by = c('id'), all = T)
+
+print("Explaination: Since the dt_lab dataset only contains information for patients whose id started from 1000 to 4000 but dt had patients whose id started from 0 - 999, these patients did not have any information in the dt_lab dataset thus had NA once the two sets merged together.")
